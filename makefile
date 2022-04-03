@@ -20,6 +20,16 @@ prod-run:
 	docker pull syamsuldocker/messaging-api
 	docker run -itd --name messaging-api --network=host -v ${CURDIR}/prod:/app/prod syamsuldocker/messaging-api env GIN_MODE=release ./messaging-api
 
+prod-restart:
+	make webserver-stop
+	make stop
+	make prod-run
+	make webserver-start
+
+prod-stop:
+	docker stop nginx messaging-api
+	docker rm nginx messaging-api
+
 stop:
 	docker stop messaging-api
 	docker rm messaging-api

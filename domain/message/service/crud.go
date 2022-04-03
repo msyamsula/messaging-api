@@ -26,7 +26,7 @@ func (s *Service) Get(userID int) ([]entity.Message, error) {
 		SenderID: uint(userID),
 	}).Or(&entity.Message{
 		ReceiverID: uint(userID),
-	}).Find(&msgs)
+	}).Order("created_at asc").Find(&msgs)
 
 	if t.Error != nil {
 		return []entity.Message{}, t.Error
