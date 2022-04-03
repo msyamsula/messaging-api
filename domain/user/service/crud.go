@@ -23,9 +23,20 @@ func (s *Service) Insert(user *entity.User) error {
 	return nil
 }
 
-func (s *Service) GetAllUser() ([]entity.User, error) {
+func (s *Service) GetAllUser(activeID int) ([]entity.User, error) {
+	var users []entity.User
+	db := s.db.Find(&users)
+
 	var result []entity.User
-	db := s.db.Find(&result)
+	for _, u := range users {
+		unread := s.db.Model(&u).Where(map[string]interface{}{
+			"receiverID": uint(activeID),
+			"isRead":     false,
+		}).Association("SentMessages").Count()
+
+		u.UnreadMessages = int(unread)
+		result = append(result, u)
+	}
 
 	return result, db.Error
 }

@@ -70,3 +70,36 @@ func (h *Handler) GetMessageByUserID(c *gin.Context) {
 		"message": Success,
 	})
 }
+
+func (h *Handler) ReadMessages(c *gin.Context) {
+	var senderID, activeID int
+	var err error
+
+	senderID, err = strconv.Atoi(c.Param("senderID"))
+	activeID, err = strconv.Atoi(c.Query("activeID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"data":    nil,
+			"error":   err.Error(),
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err = h.messageSvc.ReadMessages(senderID, activeID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"data":    nil,
+			"error":   err.Error(),
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":    nil,
+		"error":   nil,
+		"message": Success,
+	})
+}

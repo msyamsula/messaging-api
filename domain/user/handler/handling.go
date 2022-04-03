@@ -60,8 +60,24 @@ func (h *Handler) UserRegister(c *gin.Context) {
 }
 
 func (h *Handler) AllUserGet(c *gin.Context) {
-	users, err := h.userService.GetAllUser()
-	response := gin.H{
+	var err error
+	var activeID int
+	var response gin.H
+	var users []entity.User
+
+	activeID, err = strconv.Atoi(c.Query("activeID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"data":  nil,
+			"error": err,
+			"count": 0,
+		})
+
+		return
+	}
+
+	users, err = h.userService.GetAllUser(activeID)
+	response = gin.H{
 		"data":   users,
 		"errors": err,
 		"count":  len(users),
