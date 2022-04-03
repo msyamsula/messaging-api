@@ -43,9 +43,10 @@ func (h *Handler) CreateMessage(c *gin.Context) {
 func (h *Handler) GetMessageByUserID(c *gin.Context) {
 	var messages []entity.Message
 	var err error
-	var userID int
+	var senderID, receiverID int
 
-	userID, err = strconv.Atoi(c.Param("userID"))
+	senderID, err = strconv.Atoi(c.Param("senderID"))
+	receiverID, err = strconv.Atoi(c.Param("receiverID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"data":  messages,
@@ -54,7 +55,7 @@ func (h *Handler) GetMessageByUserID(c *gin.Context) {
 		return
 	}
 
-	messages, err = h.messageSvc.Get(userID)
+	messages, err = h.messageSvc.Get(senderID, receiverID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"data":  messages,

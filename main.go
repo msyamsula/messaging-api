@@ -82,7 +82,7 @@ func main() {
 	r.POST("/login", uh.UserLogin)
 
 	r.POST("/message", mh.CreateMessage)
-	r.GET("/message/:userID", mh.GetMessageByUserID)
+	r.GET("/message/:senderID/:receiverID", mh.GetMessageByUserID)
 
 	port := os.Getenv("APP_PORT")
 	fmt.Println(port)
