@@ -1,7 +1,7 @@
 package handler
 
 import (
-	svc "github.com/msyamsula/messaging-api/user/service"
+	svc "github.com/msyamsula/messaging-api/domain/user/service"
 )
 
 type Handler struct {

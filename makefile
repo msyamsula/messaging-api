@@ -68,6 +68,6 @@ certbot-stop:
 	docker rm certbot
 certbot-renew:
 	docker run -it --name certbot --network=host \
-	-v ${pwd}/certbot/www:/var/www/certbot/:rw \
-	-v ${pwd}/certbot/conf:/etc/letsencrypt/:rw \
+	-v ${CURDIR}/certbot/www:/var/www/certbot/:rw \
+	-v ${CURDIR}/certbot/conf:/etc/letsencrypt/:rw \
 	certbot/certbot:latest renew

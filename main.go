@@ -13,8 +13,11 @@ import (
 	"github.com/msyamsula/messaging-api/db/entity"
 	"github.com/msyamsula/messaging-api/db/migrator"
 
-	"github.com/msyamsula/messaging-api/user/handler"
-	"github.com/msyamsula/messaging-api/user/service"
+	msgHandler "github.com/msyamsula/messaging-api/domain/message/handler"
+	msgService "github.com/msyamsula/messaging-api/domain/message/service"
+
+	"github.com/msyamsula/messaging-api/domain/user/handler"
+	"github.com/msyamsula/messaging-api/domain/user/service"
 )
 
 func PingHandler(c *gin.Context) {
@@ -27,7 +30,6 @@ func main() {
 	if mode != "release" {
 		godotenv.Load("dev/.env")
 	} else {
-		fmt.Println("goes here")
 		godotenv.Load("prod/.env")
 	}
 
@@ -44,9 +46,13 @@ func main() {
 	db := database.GetDB()
 
 	migrator.Migrate(entity.User{}, db)
+	migrator.Migrate(entity.Message{}, db)
+
 	userService := service.NewService(db)
+	messageService := msgService.NewService(db)
 
 	uh := handler.NewHandler(userService)
+	mh := msgHandler.NewHandler(messageService)
 
 	allowedOrigins := strings.Split(os.Getenv("ORIGINS"), ",")
 
@@ -74,6 +80,9 @@ func main() {
 
 	r.POST("/register", uh.UserRegister)
 	r.POST("/login", uh.UserLogin)
+
+	r.POST("/message", mh.CreateMessage)
+	r.GET("/message/:userID", mh.GetMessageByUserID)
 
 	port := os.Getenv("APP_PORT")
 	fmt.Println(port)
