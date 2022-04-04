@@ -11,10 +11,11 @@ import (
 
 func (h *Handler) UserLogin(c *gin.Context) {
 	var user entity.User
-	c.BindJSON(&user)
+	username := c.Query("username")
+	password := c.Query("password")
 
 	var err error
-	user, err = h.userService.Login(user.Username, user.Password)
+	user, err = h.userService.Login(username, password)
 
 	var message string
 	var status int
@@ -29,6 +30,38 @@ func (h *Handler) UserLogin(c *gin.Context) {
 
 	response := gin.H{
 		"data":    user,
+		"error":   err,
+		"message": message,
+	}
+
+	c.JSON(status, response)
+}
+
+func (h *Handler) UserLogout(c *gin.Context) {
+	var err error
+	var userID int
+	userID, err = strconv.Atoi(c.Param("userID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"err": err.Error(),
+		})
+		return
+	}
+
+	err = h.userService.Logout(userID)
+
+	var message string
+	var status int
+
+	if err != nil {
+		status = http.StatusInternalServerError
+		message = "logout failed"
+	} else {
+		status = http.StatusOK
+		message = "success"
+	}
+
+	response := gin.H{
 		"error":   err,
 		"message": message,
 	}

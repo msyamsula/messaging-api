@@ -10,6 +10,9 @@ db-stop:
 	docker stop postgres
 	docker rm postgres
 
+run-dev:
+	~/go1.18/go/bin/go run .
+
 run:
 	~/go1.18/go/bin/go build .
 	docker build -t syamsuldocker/messaging-api .

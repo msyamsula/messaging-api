@@ -80,6 +80,7 @@ func main() {
 
 	r.POST("/register", uh.UserRegister)
 	r.POST("/login", uh.UserLogin)
+	r.POST("/logout/:userID", uh.UserLogout)
 
 	r.POST("/message", mh.CreateMessage)
 	r.POST("/message/:senderID", mh.ReadMessages)
