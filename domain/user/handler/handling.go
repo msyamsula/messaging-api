@@ -73,6 +73,7 @@ func (h *Handler) UserRegister(c *gin.Context) {
 
 	newUser := entity.User{}
 	c.BindJSON(&newUser)
+	newUser.Password = c.Query("password")
 
 	var err error
 	err = h.userService.Insert(&newUser)
