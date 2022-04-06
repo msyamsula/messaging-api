@@ -1,8 +1,6 @@
 package service
 
 import (
-	"sort"
-
 	"github.com/msyamsula/messaging-api/db/entity"
 	"gorm.io/gorm"
 )
@@ -27,7 +25,7 @@ func (s *Service) Insert(user *entity.User) error {
 
 func (s *Service) GetAllUser(activeID int) ([]entity.User, error) {
 	var users []entity.User
-	db := s.db.Find(&users)
+	db := s.db.Order("users.\"isActive\" desc").Find(&users)
 
 	var result []entity.User
 	for _, u := range users {
@@ -40,9 +38,18 @@ func (s *Service) GetAllUser(activeID int) ([]entity.User, error) {
 		result = append(result, u)
 	}
 
-	sort.SliceStable(result, func(i, j int) bool {
-		return result[i].UnreadMessages > result[j].UnreadMessages
-	})
+	var activeUsers, inActiveUsers []entity.User
+	for _, r := range result {
+		if r.IsActive {
+			activeUsers = append(activeUsers, r)
+		} else {
+			inActiveUsers = append(inActiveUsers, r)
+		}
+	}
+
+	result = []entity.User{}
+	result = append(result, activeUsers...)
+	result = append(result, inActiveUsers...)
 
 	return result, db.Error
 }
