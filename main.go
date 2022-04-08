@@ -28,9 +28,9 @@ func main() {
 	mode := os.Getenv("GIN_MODE")
 	fmt.Println(mode, "============")
 	if mode != "release" {
-		godotenv.Load("dev/.env")
+		godotenv.Load("env/dev/.env")
 	} else {
-		godotenv.Load("prod/.env")
+		godotenv.Load("env/prod/.env")
 	}
 
 	config := database.PgConfig{
@@ -55,12 +55,25 @@ func main() {
 	mh := msgHandler.NewHandler(messageService)
 
 	allowedOrigins := strings.Split(os.Getenv("ORIGINS"), ",")
-
+	allowedMethods := []string{
+		"GET",
+		"OPTIONS",
+		"POST",
+		"PUT",
+		"DELETE",
+	}
+	allowedHeaders := []string{
+		"*",
+	}
+	fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+	fmt.Println(allowedOrigins)
+	fmt.Println(allowedMethods)
+	fmt.Println(allowedHeaders)
 	CORS := cors.New(cors.Config{
 		AllowAllOrigins:        false,
 		AllowOrigins:           allowedOrigins,
-		AllowMethods:           []string{"GET", "POST", "PUT", "DELETE"},
-		AllowHeaders:           []string{"content-type"},
+		AllowMethods:           allowedMethods,
+		AllowHeaders:           allowedHeaders,
 		AllowCredentials:       false,
 		ExposeHeaders:          []string{},
 		MaxAge:                 0,
@@ -69,6 +82,8 @@ func main() {
 		AllowWebSockets:        false,
 		AllowFiles:             false,
 	})
+
+	// CORS = cors.Default()
 
 	r := gin.Default()
 	r.Use(CORS)

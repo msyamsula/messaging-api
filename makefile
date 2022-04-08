@@ -1,3 +1,4 @@
+# database
 db-start:
 	docker run -itd --name postgres \
 	--network=host \
@@ -10,60 +11,75 @@ db-stop:
 	docker stop postgres
 	docker rm postgres
 
-run-dev:
-	~/go1.18/go/bin/go run .
+# local
+run-local:
+	go run .
 
-run:
-	~/go1.18/go/bin/go build .
-	docker build -t syamsuldocker/messaging-api .
-	docker run -itd --name messaging-api --network=host -v ${CURDIR}/dev:/app/dev -v ${CURDIR}/prod:/app/prod syamsuldocker/messaging-api ./messaging-api
+build-docker-local:
+	go build .
+	docker build \
+	-t syamsuldocker/messaging-api \
+	-f ${CURDIR}/env/dev/Dockerfile \
+	.
 
-prod-run:
-	cp .env prod/.env
+run-docker-local:
+	make build-docker-local
+	docker run \
+	-it \
+	--rm \
+	--name messaging-api \
+	--network host \
+	syamsuldocker/messaging-api
+
+# ship to production
+ship-production:
+	go build .
+	docker build \
+	-t syamsuldocker/messaging-api \
+	-f ${CURDIR}/env/prod/Dockerfile \
+	.
+	docker push syamsuldocker/messaging-api
+	scp -i ~/syamsul.pem makefile ubuntu@ec2-3-0-149-232.ap-southeast-1.compute.amazonaws.com:~/
+	scp -i ~/syamsul.pem env/prod/default.conf ubuntu@ec2-3-0-149-232.ap-southeast-1.compute.amazonaws.com:~/nginx/
+
+# production
+run-production:
 	docker pull syamsuldocker/messaging-api
-	docker run -itd --name messaging-api --network=host -v ${CURDIR}/prod:/app/prod syamsuldocker/messaging-api env GIN_MODE=release ./messaging-api
+	docker run \
+	-itd \
+	--name messaging-api \
+	--network=host \
+	-e GIN_MODE=release \
+	syamsuldocker/messaging-api
+	docker run \
+	-itd \
+	--name nginx \
+	--network=host \
+	-v ${CURDIR}/nginx/:/etc/nginx/conf.d/ \
+	-v ${CURDIR}/certbot/conf:/etc/nginx/ssl \
+	-v ${CURDIR}/certbot/www:/var/www/certbot/ \
+	nginx
 
-prod-restart:
-	make webserver-stop
-	make stop
-	make prod-run
-	make webserver-start
-
-prod-stop:
+stop-production:
 	docker stop nginx messaging-api
 	docker rm nginx messaging-api
 
-stop:
-	docker stop messaging-api
-	docker rm messaging-api
+restart-production:
+	make stop-production
+	make run-production
 
-vm-start:
-	docker run -it --name vm --network=host -v ${CURDIR}/dev:/app/dev syamsuldocker/messaging-api bash
-
-vm-stop:
-	docker stop vm
-	docker rm vm
-
+# ssh
 ssh:
 	ssh -i ~/syamsul.pem ubuntu@ec2-3-0-149-232.ap-southeast-1.compute.amazonaws.com
 
-ship:
-	~/go1.18/go/bin/go build .
-	docker build -t syamsuldocker/messaging-api .
-	scp -i ~/syamsul.pem makefile ubuntu@ec2-3-0-149-232.ap-southeast-1.compute.amazonaws.com:~
-	scp -i ~/syamsul.pem prod/.env ubuntu@ec2-3-0-149-232.ap-southeast-1.compute.amazonaws.com:~/.env
-	scp -i ~/syamsul.pem nginx/conf/nginx.conf ubuntu@ec2-3-0-149-232.ap-southeast-1.compute.amazonaws.com:~/nginx/conf
-	docker push syamsuldocker/messaging-api
-
-
 # https tools
-webserver-start:
+start-webserver:
 	docker run -itd --name nginx --network=host \
 	 -v ${CURDIR}/nginx/conf/:/etc/nginx/conf.d/:ro \
 	 -v ${CURDIR}/certbot/www:/var/www/certbot/:ro \
 	 -v ${CURDIR}/certbot/conf:/etc/nginx/ssl/:ro \
 	 nginx:latest
-webserver-stop:
+stop-webserver:
 	docker stop nginx
 	docker rm nginx
 certbot-dry-run:
@@ -84,3 +100,20 @@ certbot-renew:
 	-v ${CURDIR}/certbot/www:/var/www/certbot/:rw \
 	-v ${CURDIR}/certbot/conf:/etc/letsencrypt/:rw \
 	certbot/certbot:latest renew
+
+# kubernetes
+kube-build:
+	go build .
+	docker build -t syamsuldocker/messaging-api-kubernetes:v${version} -f env/kube/Dockerfile .
+
+kube-ship:
+	make version=${version} kube-build
+	docker push syamsuldocker/messaging-api-kubernetes:v${version}
+
+kube-dev-run:
+	make version=${version} kube-build
+	docker run -it --name messaging-api -e GIN_MODE=release --network=host syamsuldocker/messaging-api-kubernetes:v${version}
+
+kube-stop:
+	docker stop messaging-api
+	docker rm messaging-api
