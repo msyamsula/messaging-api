@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres
+    environment: 
+      - "POSTGRES_USER=admin"
+      - "POSTGRES_PASSWORD=admin"
+    ports:
+      - 5432:5432
+
+  nginx-api:
+    image: syamsuldocker/nginx-api
+    ports:
+     - "5000:80"
+
+  messaging-api:
+    image: syamsuldocker/messaging-api
+    depends_on: 
+      - postgres

@@ -1,35 +1,29 @@
-# database
-db-start:
-	docker run -itd --name postgres \
-	--network=host \
-	-e POSTGRES_PASSWORD=admin \
-	-e POSTGRES_USER=admin \
-	-e PGDATA=/var/lib/postgresql/data/pgdata \
-	postgres
-
-db-stop:
-	docker stop postgres
-	docker rm postgres
-
 # local
 run-local:
 	go run .
 
-build-docker-local:
+# cluster
+build:
 	go build .
 	docker build \
 	-t syamsuldocker/messaging-api \
 	-f ${CURDIR}/env/dev/Dockerfile \
 	.
+	docker build \
+	-t syamsuldocker/nginx-api \
+	-f ${CURDIR}/env/dev/Dockerfile.nginx \
+	.
 
-run-docker-local:
-	make build-docker-local
-	docker run \
-	-it \
-	--rm \
-	--name messaging-api \
-	--network host \
-	syamsuldocker/messaging-api
+run:
+	make build
+	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml up -d --scale messaging-api=${scale}
+
+stop:
+	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml down
+
+ps:
+	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml ps
+
 
 # ship to production
 ship-production:

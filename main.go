@@ -55,16 +55,8 @@ func main() {
 	mh := msgHandler.NewHandler(messageService)
 
 	allowedOrigins := strings.Split(os.Getenv("ORIGINS"), ",")
-	allowedMethods := []string{
-		"GET",
-		"OPTIONS",
-		"POST",
-		"PUT",
-		"DELETE",
-	}
-	allowedHeaders := []string{
-		"*",
-	}
+	allowedMethods := strings.Split(os.Getenv("ALLOWED_METHODS"), ",")
+	allowedHeaders := strings.Split(os.Getenv("ALLOWED_HEADERS"), ",")
 	fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 	fmt.Println(allowedOrigins)
 	fmt.Println(allowedMethods)
@@ -88,18 +80,21 @@ func main() {
 	r := gin.Default()
 	r.Use(CORS)
 
-	r.GET("/ping", PingHandler)
+	apiPrefix := os.Getenv("API_PREFIX")
+	fmt.Println(apiPrefix)
 
-	r.GET("/user/:id", uh.GetSpecificUser)
-	r.GET("/user", uh.AllUserGet)
+	r.GET(apiPrefix+"/ping", PingHandler)
 
-	r.POST("/register", uh.UserRegister)
-	r.POST("/login", uh.UserLogin)
-	r.POST("/logout/:userID", uh.UserLogout)
+	r.GET(apiPrefix+"/user/:id", uh.GetSpecificUser)
+	r.GET(apiPrefix+"/user", uh.AllUserGet)
 
-	r.POST("/message", mh.CreateMessage)
-	r.POST("/message/:senderID", mh.ReadMessages)
-	r.GET("/message/:senderID/:receiverID", mh.GetMessageByUserID)
+	r.POST(apiPrefix+"/register", uh.UserRegister)
+	r.POST(apiPrefix+"/login", uh.UserLogin)
+	r.POST(apiPrefix+"/logout/:userID", uh.UserLogout)
+
+	r.POST(apiPrefix+"/message", mh.CreateMessage)
+	r.POST(apiPrefix+"/message/:senderID", mh.ReadMessages)
+	r.GET(apiPrefix+"/message/:senderID/:receiverID", mh.GetMessageByUserID)
 
 	port := os.Getenv("APP_PORT")
 	fmt.Println(port)
