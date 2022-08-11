@@ -1,0 +1,5 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/syamsul/messaging-api'
+go run .
+make: Leaving directory '/home/syamsul/messaging-api'
+ 

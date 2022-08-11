@@ -9,10 +9,10 @@ build:
 	-t syamsuldocker/messaging-api \
 	-f ${CURDIR}/env/dev/Dockerfile \
 	.
-	docker build \
-	-t syamsuldocker/nginx-api \
-	-f ${CURDIR}/env/dev/Dockerfile.nginx \
-	.
+	# docker build \
+	# -t syamsuldocker/nginx-api \
+	# -f ${CURDIR}/env/dev/Dockerfile.nginx \
+	# .
 
 run:
 	make build

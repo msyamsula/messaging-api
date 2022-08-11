@@ -57,7 +57,6 @@ func main() {
 	allowedOrigins := strings.Split(os.Getenv("ORIGINS"), ",")
 	allowedMethods := strings.Split(os.Getenv("ALLOWED_METHODS"), ",")
 	allowedHeaders := strings.Split(os.Getenv("ALLOWED_HEADERS"), ",")
-	fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 	fmt.Println(allowedOrigins)
 	fmt.Println(allowedMethods)
 	fmt.Println(allowedHeaders)
