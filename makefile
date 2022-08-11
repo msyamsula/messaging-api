@@ -7,12 +7,8 @@ build:
 	go build .
 	docker build \
 	-t syamsuldocker/messaging-api \
-	-f ${CURDIR}/env/dev/Dockerfile \
+	-f Dockerfile \
 	.
-	# docker build \
-	# -t syamsuldocker/nginx-api \
-	# -f ${CURDIR}/env/dev/Dockerfile.nginx \
-	# .
 
 run:
 	make build
