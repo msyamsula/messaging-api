@@ -25,12 +25,11 @@ func PingHandler(c *gin.Context) {
 }
 
 func main() {
+	godotenv.Load(".env")
 	mode := os.Getenv("GIN_MODE")
 	fmt.Println(mode, "============")
-	if mode != "release" {
-		godotenv.Load("env/dev/.env")
-	} else {
-		godotenv.Load("env/prod/.env")
+	if mode == "release" {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	config := database.PgConfig{
