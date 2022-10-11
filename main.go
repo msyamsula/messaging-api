@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	_ "github.com/lib/pq"
-	"github.com/msyamsula/messaging-api/database"
-	"github.com/msyamsula/messaging-api/database/service"
+	"github.com/msyamsula/messaging-api/user"
+	"github.com/msyamsula/messaging-api/user/database"
+	userDB "github.com/msyamsula/messaging-api/user/database/object"
+	userSvc "github.com/msyamsula/messaging-api/user/service/object"
 )
 
 func main() {
@@ -19,32 +20,20 @@ func main() {
 		Dbname:   os.Getenv("DB_NAME"),
 	}
 
-	DbObject, err := service.New(cfg)
-	defer DbObject.D.Close()
-	if err != nil {
-		panic(err)
-	}
+	var userDomain user.UserDomain
+	{
+		db, err := userDB.New(cfg)
+		if err != nil {
+			panic(err)
+		}
 
-	if user, err := DbObject.GetUserByID("2"); err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(user)
-	}
+		svc, err := userSvc.New(db)
+		if err != nil {
+			panic(err)
+		}
 
-	if user, err := DbObject.GetUserByUsername("syamsul"); err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(user)
+		userDomain.Svc = svc
 	}
-
-	if user, err := DbObject.GetUserByUsername("wikwik"); err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(user)
-	}
-
-	users, err := DbObject.GetAllUser()
-	fmt.Println(users)
 
 }
 

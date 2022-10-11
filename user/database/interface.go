@@ -9,6 +9,7 @@ type DbConfig struct {
 }
 
 type User struct {
+	ID       int64
 	Name     string
 	Password string
 	IsActive string
@@ -17,6 +18,6 @@ type User struct {
 type DB interface {
 	InsertUser(username string, password string) error
 	GetUserByID(id string) (User, error)
-	GetUserByUsername(username string)
+	GetUserByUsername(username string) (User, error)
 	GetAllUser() ([]User, error)
 }

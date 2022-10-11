@@ -1,18 +1,18 @@
-package service
+package object
 
 import (
 	"database/sql"
 	"fmt"
 
-	"github.com/msyamsula/messaging-api/database"
-	"github.com/msyamsula/messaging-api/database/query"
+	"github.com/msyamsula/messaging-api/user/database"
+	"github.com/msyamsula/messaging-api/user/database/query"
 )
 
 type DbObject struct {
 	D *sql.DB
 }
 
-func New(c database.DbConfig) (*DbObject, error) {
+func New(c database.DbConfig) (database.DB, error) {
 
 	dbo := &DbObject{}
 	d, err := connect(c)
@@ -42,15 +42,14 @@ func connect(c database.DbConfig) (*sql.DB, error) {
 }
 
 func (d *DbObject) InsertUser(username string, password string) error {
-	res, err := d.D.Exec(query.InsertNewUserQuery, username, password)
-	fmt.Println(res)
+	_, err := d.D.Exec(query.InsertNewUserQuery, username, password)
 	return err
 }
 
 func (d *DbObject) GetUserByID(id string) (database.User, error) {
 	row := d.D.QueryRow(query.GetUserByIDQuery, id)
 	user := database.User{}
-	err := row.Scan(&user.Name, &user.Password, &user.IsActive)
+	err := row.Scan(&user.ID, &user.Name, &user.Password, &user.IsActive)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -65,23 +64,18 @@ func (d *DbObject) GetUserByID(id string) (database.User, error) {
 func (d *DbObject) GetUserByUsername(username string) (database.User, error) {
 	row := d.D.QueryRow(query.GetUserByUsernameQuery, username)
 	user := database.User{}
-	err := row.Scan(&user.Name, &user.Password, &user.IsActive)
+	err := row.Scan(&user.ID, &user.Name, &user.Password, &user.IsActive)
 
-	switch err {
-	case sql.ErrNoRows:
-		return user, nil
-	case nil:
-		return user, err
-	default:
-		return user, err
-	}
+	return user, err
 }
 
 func (d *DbObject) GetAllUser() ([]database.User, error) {
 	users := []database.User{}
 	var err error
 	rows, err := d.D.Query(query.GetAllUsersQuery)
-	defer rows.Close()
+	defer func() {
+		rows.Close()
+	}()
 
 	if err != nil {
 		return users, err
@@ -89,7 +83,7 @@ func (d *DbObject) GetAllUser() ([]database.User, error) {
 
 	for rows.Next() {
 		user := database.User{}
-		err := rows.Scan(&user.Name, &user.Password, &user.IsActive)
+		err := rows.Scan(&user.ID, &user.Name, &user.Password, &user.IsActive)
 		if err != nil {
 			continue
 		}
