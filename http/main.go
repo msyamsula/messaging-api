@@ -3,10 +3,12 @@ package main
 import (
 	"os"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"github.com/msyamsula/messaging-api/user"
 	"github.com/msyamsula/messaging-api/user/database"
 	userDB "github.com/msyamsula/messaging-api/user/database/object"
+	"github.com/msyamsula/messaging-api/user/handler/object"
 	userSvc "github.com/msyamsula/messaging-api/user/service/object"
 )
 
@@ -34,6 +36,17 @@ func main() {
 
 		userDomain.Svc = svc
 	}
+
+	r := gin.Default()
+	apiPrefix := os.Getenv("API_PREFIX")
+	userHandler := object.New(userDomain.Svc)
+
+	r.GET(apiPrefix+"/ping", userHandler.Pong)
+	r.GET(apiPrefix+"/login", userHandler.Login)
+	r.POST(apiPrefix+"/register", userHandler.Register)
+	r.GET(apiPrefix+"/users", userHandler.GetAllUser)
+
+	r.Run("127.0.0.1:5000")
 
 }
 

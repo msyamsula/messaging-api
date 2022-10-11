@@ -9,10 +9,10 @@ type DbConfig struct {
 }
 
 type User struct {
-	ID       int64
-	Name     string
-	Password string
-	IsActive string
+	ID       int64  `json:"-"`
+	Name     string `json:"username"`
+	Password string `json:"-"`
+	IsActive string `json:"is_active"`
 }
 
 type DB interface {
