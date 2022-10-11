@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -46,8 +47,7 @@ func main() {
 	r.POST(apiPrefix+"/register", userHandler.Register)
 	r.GET(apiPrefix+"/users", userHandler.GetAllUser)
 
-	r.Run("127.0.0.1:5000")
-
+	r.Run(fmt.Sprintf(":%v", os.Getenv("APP_PORT")))
 }
 
 // package main
