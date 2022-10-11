@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	tokenI "github.com/msyamsula/messaging-api/middleware/token"
 	"github.com/msyamsula/messaging-api/user/database"
 	"github.com/msyamsula/messaging-api/user/handler"
 	userSvc "github.com/msyamsula/messaging-api/user/service"
@@ -12,11 +13,13 @@ import (
 
 type HandlerObj struct {
 	Svc userSvc.Service
+	t   tokenI.Token
 }
 
-func New(svc userSvc.Service) handler.Handler {
+func New(svc userSvc.Service, t tokenI.Token) handler.Handler {
 	h := &HandlerObj{
 		Svc: svc,
+		t:   t,
 	}
 
 	return h
@@ -59,8 +62,18 @@ func (h *HandlerObj) Login(c *gin.Context) {
 		return
 	}
 
+	var token string
+	token, err = h.t.Create(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"data": user,
+		"data":  user,
+		"token": token,
 	})
 }
 

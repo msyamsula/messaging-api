@@ -38,6 +38,9 @@ func (mg *Mongo) InsertMessage(ctx context.Context, m database.MessageToInsert) 
 	var err error
 	var cName string
 	cName, err = createCollection(m.SenderID, m.ReceiverID)
+	if err != nil {
+		return database.ErrCreatingCollection
+	}
 	c := mg.Client.Database("PrivateMessages").Collection(cName)
 
 	_, err = c.InsertOne(ctx, m)
@@ -54,6 +57,9 @@ func (mg *Mongo) GetConversation(ctx context.Context, person1 int64, person2 int
 
 	var cName string
 	cName, err = createCollection(person1, person2)
+	if err != nil {
+		return res, database.ErrCreatingCollection
+	}
 	c := mg.Client.Database("PrivateMessages").Collection(cName)
 
 	var cur *mongo.Cursor
@@ -89,8 +95,8 @@ func New(uri string) (database.Database, error) {
 	var client *mongo.Client
 
 	client, err = mongo.NewClient(options.Client().ApplyURI(uri))
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	if err != nil {
 		return db, err
 	}

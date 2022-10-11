@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -17,6 +18,9 @@ import (
 	userHandler "github.com/msyamsula/messaging-api/user/handler/object"
 	userSvcI "github.com/msyamsula/messaging-api/user/service"
 	userSvc "github.com/msyamsula/messaging-api/user/service/object"
+
+	mdwareHandlerO "github.com/msyamsula/messaging-api/middleware/handler/object"
+	tokenO "github.com/msyamsula/messaging-api/middleware/token/object"
 )
 
 func main() {
@@ -58,19 +62,26 @@ func main() {
 		messageService = msgSvc.New(db)
 	}
 
+	secret := os.Getenv("JSON_SECRET")
+	expiryTime := 30 * time.Minute
+	tokenI := tokenO.New([]byte(secret), expiryTime)
+
 	r := gin.Default()
 	apiPrefix := os.Getenv("API_PREFIX")
-	userHandler := userHandler.New(userService)
+
+	// handler
+	mdwareHandlerI := mdwareHandlerO.New(tokenI)
+	userHandler := userHandler.New(userService, tokenI)
 	msgHandler := msgHandler.New(messageService)
 
 	r.GET(apiPrefix+"/ping", userHandler.Pong)
 	r.GET(apiPrefix+"/login", userHandler.Login)
 	r.POST(apiPrefix+"/register", userHandler.Register)
-	r.GET(apiPrefix+"/users", userHandler.GetAllUser)
+	r.GET(apiPrefix+"/users", mdwareHandlerI.ValidateToken, userHandler.GetAllUser)
 
-	r.POST(apiPrefix+"/message", msgHandler.InsertMessage)
-	r.GET(apiPrefix+"/message", msgHandler.GetConversation)
-	r.PUT(apiPrefix+"/message", msgHandler.ReadMessage)
+	r.POST(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.InsertMessage)
+	r.GET(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.GetConversation)
+	r.PUT(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.ReadMessage)
 
 	r.Run(fmt.Sprintf(":%v", os.Getenv("APP_PORT")))
 }

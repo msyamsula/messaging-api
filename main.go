@@ -1,6 +1,27 @@
 package main
 
+import (
+	"fmt"
+	"os"
+	"time"
+
+	tokenObj "github.com/msyamsula/messaging-api/middleware/token/object"
+)
+
 func main() {
+
+	secretStr := os.Getenv("JSON_SECRET")
+	fmt.Println(secretStr)
+	expDuration := 10 * time.Minute
+	token := tokenObj.New([]byte(secretStr), expDuration)
+
+	userID := 2
+	t, err := token.Create(int64(userID))
+	fmt.Println(t)
+	// var jt *jwt.Claims
+	t, err = token.Validate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjU1MDEyNzgsInVzZXJJRCI6Mn0.r9xrJlZ7YnJxBch9FOTc2bmfWW8c6TGbW-fOztyAcPM")
+	// fmt.Println(t)
+	fmt.Println(err, t)
 
 	// var err error
 	// var db database.Database
