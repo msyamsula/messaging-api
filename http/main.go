@@ -6,25 +6,30 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
-	"github.com/msyamsula/messaging-api/user"
-	"github.com/msyamsula/messaging-api/user/database"
+	msgDBI "github.com/msyamsula/messaging-api/message/database"
+	msgDB "github.com/msyamsula/messaging-api/message/database/object"
+	msgHandler "github.com/msyamsula/messaging-api/message/handler/object"
+	msgSvcI "github.com/msyamsula/messaging-api/message/service"
+	msgSvc "github.com/msyamsula/messaging-api/message/service/object"
+
+	userDBI "github.com/msyamsula/messaging-api/user/database"
 	userDB "github.com/msyamsula/messaging-api/user/database/object"
-	"github.com/msyamsula/messaging-api/user/handler/object"
+	userHandler "github.com/msyamsula/messaging-api/user/handler/object"
+	userSvcI "github.com/msyamsula/messaging-api/user/service"
 	userSvc "github.com/msyamsula/messaging-api/user/service/object"
 )
 
 func main() {
 
-	cfg := database.DbConfig{
-		Host:     os.Getenv("DB_HOST"),
-		User:     os.Getenv("DB_USERNAME"),
-		Port:     os.Getenv("DB_PORT"),
-		Password: os.Getenv("DB_PASSWORD"),
-		Dbname:   os.Getenv("DB_NAME"),
-	}
-
-	var userDomain user.UserDomain
+	var userService userSvcI.Service
 	{
+		cfg := userDBI.DbConfig{
+			Host:     os.Getenv("DB_HOST"),
+			User:     os.Getenv("DB_USERNAME"),
+			Port:     os.Getenv("DB_PORT"),
+			Password: os.Getenv("DB_PASSWORD"),
+			Dbname:   os.Getenv("DB_NAME"),
+		}
 		db, err := userDB.New(cfg)
 		if err != nil {
 			panic(err)
@@ -35,17 +40,37 @@ func main() {
 			panic(err)
 		}
 
-		userDomain.Svc = svc
+		userService = svc
+
+	}
+
+	var messageService msgSvcI.Service
+	{
+		mongoURI := os.Getenv("MONGO_URI")
+		var err error
+		var db msgDBI.Database
+
+		db, err = msgDB.New(mongoURI)
+		if err != nil {
+			panic(err)
+		}
+
+		messageService = msgSvc.New(db)
 	}
 
 	r := gin.Default()
 	apiPrefix := os.Getenv("API_PREFIX")
-	userHandler := object.New(userDomain.Svc)
+	userHandler := userHandler.New(userService)
+	msgHandler := msgHandler.New(messageService)
 
 	r.GET(apiPrefix+"/ping", userHandler.Pong)
 	r.GET(apiPrefix+"/login", userHandler.Login)
 	r.POST(apiPrefix+"/register", userHandler.Register)
 	r.GET(apiPrefix+"/users", userHandler.GetAllUser)
+
+	r.POST(apiPrefix+"/message", msgHandler.InsertMessage)
+	r.GET(apiPrefix+"/message", msgHandler.GetConversation)
+	r.PUT(apiPrefix+"/message", msgHandler.ReadMessage)
 
 	r.Run(fmt.Sprintf(":%v", os.Getenv("APP_PORT")))
 }
