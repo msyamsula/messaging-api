@@ -15,7 +15,7 @@ var (
 	`
 
 	GetAllUsersQuery string = `
-		select id, username, password, is_active from users
+		select id, username, password, is_active from users order by username asc
 	`
 
 	SetIsActiveUserQuery string = `
