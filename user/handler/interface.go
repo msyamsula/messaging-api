@@ -24,6 +24,7 @@ type Handler interface {
 	Register(c *gin.Context)
 	Pong(c *gin.Context)
 	GetAllUser(c *gin.Context)
+	Logout(c *gin.Context)
 }
 
 // func InitUserHandler(svc *service.Service) map[HandlerName]gin.HandlerFunc {

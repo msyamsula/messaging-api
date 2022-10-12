@@ -119,3 +119,33 @@ func (h *HandlerObj) GetAllUser(c *gin.Context) {
 		"data": users,
 	})
 }
+
+func (h *HandlerObj) Logout(c *gin.Context) {
+	var err error
+	var ok bool
+	var username string
+	username, ok = c.GetQuery("username")
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "no userID in query string",
+		})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	err = h.Svc.Logout(username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": "success",
+	})
+}

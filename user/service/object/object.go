@@ -9,7 +9,7 @@ type Service struct {
 	Db database.DB
 }
 
-func New(db database.DB) (*Service, error) {
+func New(db database.DB) (service.Service, error) {
 	svc := &Service{
 		Db: db,
 	}
@@ -38,15 +38,9 @@ func (svc *Service) Login(username string, password string) (database.User, erro
 	var err error
 	var user database.User
 
-	user, err = svc.Db.GetUserByUsername(username)
+	user, err = svc.Db.Login(username, password)
 	if err != nil {
 		return user, err
-	}
-
-	dbPassword := user.Password
-
-	if dbPassword != password {
-		return database.User{}, service.ErrWrongPassword
 	}
 
 	return user, nil
@@ -57,4 +51,8 @@ func (svc *Service) GetAllUser() ([]database.User, error) {
 	// var users []database.User
 
 	return svc.Db.GetAllUser()
+}
+
+func (s *Service) Logout(username string) error {
+	return s.Db.Logout(username)
 }

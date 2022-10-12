@@ -1,6 +1,7 @@
 package object
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -46,19 +47,33 @@ func (d *DbObject) InsertUser(username string, password string) error {
 	return err
 }
 
-func (d *DbObject) GetUserByID(id string) (database.User, error) {
-	row := d.D.QueryRow(query.GetUserByIDQuery, id)
+func (d *DbObject) Login(username string, password string) (database.User, error) {
 	user := database.User{}
-	err := row.Scan(&user.ID, &user.Name, &user.Password, &user.IsActive)
-
-	switch err {
-	case sql.ErrNoRows:
-		return user, nil
-	case nil:
-		return user, err
-	default:
+	tx, err := d.D.BeginTx(context.Background(), nil)
+	if err != nil {
 		return user, err
 	}
+	defer tx.Rollback()
+
+	row := tx.QueryRow(query.GetUserByUsernameQuery, username)
+	err = row.Scan(&user.ID, &user.Name, &user.Password, &user.IsActive)
+	if err != nil {
+		return user, err
+	}
+
+	if user.Password != password {
+		return database.User{}, database.ErrInvalidPassword
+	}
+
+	_, err = tx.Exec(query.SetIsActiveUserQuery, true, username)
+	if err != nil {
+		return user, err
+	}
+
+	err = tx.Commit()
+	user.IsActive = true
+	return user, err
+
 }
 
 func (d *DbObject) GetUserByUsername(username string) (database.User, error) {
@@ -92,4 +107,10 @@ func (d *DbObject) GetAllUser() ([]database.User, error) {
 
 	return users, err
 
+}
+
+func (d *DbObject) Logout(username string) error {
+	var err error
+	_, err = d.D.Exec(query.SetIsActiveUserQuery, false, username)
+	return err
 }

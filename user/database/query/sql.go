@@ -17,4 +17,8 @@ var (
 	GetAllUsersQuery string = `
 		select id, username, password, is_active from users
 	`
+
+	SetIsActiveUserQuery string = `
+		update users set is_active = ($1) where username = ($2)
+	`
 )

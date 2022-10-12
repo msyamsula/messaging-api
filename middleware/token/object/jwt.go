@@ -1,8 +1,6 @@
 package object
 
 import (
-	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -45,52 +43,13 @@ func (j *JWT) Validate(token string) (string, error) {
 	}
 
 	var err error
-	var t *jwt.Token
-	t, err = jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+	// var t *jwt.Token
+	_, err = jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return "", tokenI.ErrSignAlgoNotMatched
 		}
 		return j.Secret, nil
 	})
-
-	if err != nil && err.Error() != "Token is expired" {
-		return token, err
-	}
-
-	var ok bool
-	var claim jwt.MapClaims
-	if t.Claims == nil {
-		return token, tokenI.ErrInvalidClaim
-	}
-
-	claim, ok = t.Claims.(jwt.MapClaims)
-	if !ok {
-		return token, tokenI.ErrInvalidClaim
-	}
-
-	var userID interface{}
-	userID, ok = claim["userID"]
-	if !ok {
-		return token, tokenI.ErrInvalidClaim
-	}
-
-	if err != nil && err.Error() == "Token is expired" {
-		var ok bool
-		var uid float64
-		uid, ok = userID.(float64)
-		fmt.Println(uid, ok)
-		if !ok {
-			fmt.Println("goes here", reflect.TypeOf(userID))
-			return token, tokenI.ErrRefreshingToken
-		}
-
-		newToken, err := j.Create(int64(uid))
-		if err != nil {
-			return token, tokenI.ErrRefreshingToken
-		}
-
-		return newToken, nil
-	}
 
 	return token, err
 }

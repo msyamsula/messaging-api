@@ -1,7 +1,6 @@
 package object
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +25,7 @@ func (h *Handler) ValidateToken(c *gin.Context) {
 
 	token := c.GetHeader("x-api-token")
 
-	token, err = h.t.Validate(token)
+	_, err = h.t.Validate(token)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -34,9 +33,6 @@ func (h *Handler) ValidateToken(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
-	fmt.Println("goes here")
-	c.Request.Header.Set("x-api-token", token)
 
 	c.Next()
 }

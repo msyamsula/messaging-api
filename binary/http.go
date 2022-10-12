@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	msgDBI "github.com/msyamsula/messaging-api/message/database"
@@ -67,17 +69,38 @@ func main() {
 	tokenI := tokenO.New([]byte(secret), expiryTime)
 
 	r := gin.Default()
-	apiPrefix := os.Getenv("API_PREFIX")
+	allowedOrigins := strings.Split(os.Getenv("ORIGINS"), ",")
+	allowedMethods := strings.Split(os.Getenv("ALLOWED_METHODS"), ",")
+	allowedHeaders := strings.Split(os.Getenv("ALLOWED_HEADERS"), ",")
+	fmt.Println(allowedOrigins)
+	fmt.Println(allowedMethods)
+	fmt.Println(allowedHeaders)
+	CORS := cors.New(cors.Config{
+		AllowAllOrigins:        false,
+		AllowOrigins:           allowedOrigins,
+		AllowMethods:           allowedMethods,
+		AllowHeaders:           allowedHeaders,
+		AllowCredentials:       false,
+		ExposeHeaders:          []string{},
+		MaxAge:                 0,
+		AllowWildcard:          false,
+		AllowBrowserExtensions: false,
+		AllowWebSockets:        false,
+		AllowFiles:             false,
+	})
+	r.Use(CORS)
 
 	// handler
 	mdwareHandlerI := mdwareHandlerO.New(tokenI)
 	userHandler := userHandler.New(userService, tokenI)
 	msgHandler := msgHandler.New(messageService)
 
+	apiPrefix := os.Getenv("API_PREFIX")
 	r.GET(apiPrefix+"/ping", userHandler.Pong)
 	r.GET(apiPrefix+"/login", userHandler.Login)
 	r.POST(apiPrefix+"/register", userHandler.Register)
 	r.GET(apiPrefix+"/users", mdwareHandlerI.ValidateToken, userHandler.GetAllUser)
+	r.POST(apiPrefix+"/logout", mdwareHandlerI.ValidateToken, userHandler.Logout)
 
 	r.POST(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.InsertMessage)
 	r.GET(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.GetConversation)
@@ -141,30 +164,9 @@ func main() {
 // 	uh := handler.NewHandler(userService)
 // 	mh := msgHandler.NewHandler(messageService)
 
-// 	allowedOrigins := strings.Split(os.Getenv("ORIGINS"), ",")
-// 	allowedMethods := strings.Split(os.Getenv("ALLOWED_METHODS"), ",")
-// 	allowedHeaders := strings.Split(os.Getenv("ALLOWED_HEADERS"), ",")
-// 	fmt.Println(allowedOrigins)
-// 	fmt.Println(allowedMethods)
-// 	fmt.Println(allowedHeaders)
-// 	CORS := cors.New(cors.Config{
-// 		AllowAllOrigins:        false,
-// 		AllowOrigins:           allowedOrigins,
-// 		AllowMethods:           allowedMethods,
-// 		AllowHeaders:           allowedHeaders,
-// 		AllowCredentials:       false,
-// 		ExposeHeaders:          []string{},
-// 		MaxAge:                 0,
-// 		AllowWildcard:          false,
-// 		AllowBrowserExtensions: false,
-// 		AllowWebSockets:        false,
-// 		AllowFiles:             false,
-// 	})
-
 // 	// CORS = cors.Default()
 
 // 	r := gin.Default()
-// 	r.Use(CORS)
 
 // 	apiPrefix := os.Getenv("API_PREFIX")
 // 	fmt.Println(apiPrefix)
