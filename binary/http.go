@@ -100,7 +100,7 @@ func main() {
 	r.GET(apiPrefix+"/login", userHandler.Login)
 	r.POST(apiPrefix+"/register", userHandler.Register)
 	r.GET(apiPrefix+"/users", mdwareHandlerI.ValidateToken, userHandler.GetAllUser)
-	r.POST(apiPrefix+"/logout", mdwareHandlerI.ValidateToken, userHandler.Logout)
+	r.POST(apiPrefix+"/logout", userHandler.Logout)
 
 	r.POST(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.InsertMessage)
 	r.GET(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.GetConversation)
