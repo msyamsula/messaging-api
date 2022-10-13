@@ -53,7 +53,7 @@ func (mg *Mongo) GetConversation(ctx context.Context, person1 int64, person2 int
 	var res []database.Message
 	threeMonths := time.Now().AddDate(0, -3, 0).Unix()
 	filter := bson.D{{Key: "unix_created_at", Value: bson.D{{Key: "$gte", Value: threeMonths}}}}
-	opts := options.Find().SetSort(bson.D{{Key: "unix_created_at"}})
+	opts := options.Find().SetSort(bson.D{{Key: "unix_created_at", Value: 1}})
 
 	var cName string
 	cName, err = createCollection(person1, person2)
