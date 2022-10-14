@@ -30,3 +30,7 @@ func (svc *Service) GetConversation(ctx context.Context, person1 int64, person2 
 func (svc *Service) ReadMessage(ctx context.Context, person1 int64, person2 int64) error {
 	return svc.Db.ReadMessage(ctx, person1, person2)
 }
+
+func (svc *Service) CountUnread(ctx context.Context, senderID int64, receiverID int64) (int64, error) {
+	return svc.Db.CountUnread(ctx, senderID, receiverID)
+}

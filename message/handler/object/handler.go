@@ -2,6 +2,7 @@ package object
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,55 +28,29 @@ func New(s service.Service) handler.Handler {
 func (h *Handler) InsertMessage(c *gin.Context) {
 
 	var err error
-	var ok bool
-	var senderID, receiverID int64
-	var sid, rid string
 
-	sid, ok = c.GetQuery("senderID")
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "no sender id",
-		})
-		return
+	type body struct {
+		ReceiverID int64  `json:"receiver_id"`
+		SenderID   int64  `json:"sender_id"`
+		Text       string `json:"text"`
+		IsRead     bool   `json:"is_read"`
 	}
 
-	rid, ok = c.GetQuery("receiverID")
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "no receiver id",
-		})
-		return
-	}
-
-	senderID, err = strconv.ParseInt(sid, 10, 64)
+	b := body{}
+	err = c.BindJSON(&b)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	receiverID, err = strconv.ParseInt(rid, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "error in json" + err.Error(),
 		})
 		return
 	}
 
 	m := database.MessageToInsert{
-		SenderID:   senderID,
-		ReceiverID: receiverID,
+		SenderID:   b.SenderID,
+		ReceiverID: b.ReceiverID,
+		Text:       b.Text,
 		CreatedAt:  time.Now().Unix(),
-		IsRead:     false,
-	}
-
-	err = c.BindJSON(&m)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
+		IsRead:     b.IsRead,
 	}
 
 	ctx := context.Background()
@@ -195,4 +170,39 @@ func (h *Handler) GetConversation(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": messages,
 	})
+}
+
+func (h *Handler) CountUnread(c *gin.Context) {
+
+	var err error
+
+	type params struct {
+		SenderID   int64 `form:"senderID"`
+		ReceiverID int64 `form:"receiverID"`
+	}
+
+	p := params{}
+	err = c.Bind(&p)
+	fmt.Println(p)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{
+			"message": "wrong http params",
+		})
+
+		return
+	}
+
+	var unread int64
+	unread, err = h.Svc.CountUnread(context.Background(), p.SenderID, p.ReceiverID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"count": unread,
+	})
+
 }

@@ -41,7 +41,7 @@ func (mg *Mongo) InsertMessage(ctx context.Context, m database.MessageToInsert) 
 	if err != nil {
 		return database.ErrCreatingCollection
 	}
-	c := mg.Client.Database("PrivateMessages").Collection(cName)
+	c := mg.Client.Database(database.DatabaseName).Collection(cName)
 
 	_, err = c.InsertOne(ctx, m)
 	return err
@@ -60,7 +60,7 @@ func (mg *Mongo) GetConversation(ctx context.Context, person1 int64, person2 int
 	if err != nil {
 		return res, database.ErrCreatingCollection
 	}
-	c := mg.Client.Database("PrivateMessages").Collection(cName)
+	c := mg.Client.Database(database.DatabaseName).Collection(cName)
 
 	var cur *mongo.Cursor
 	cur, err = c.Find(ctx, filter, opts)
@@ -73,16 +73,16 @@ func (mg *Mongo) GetConversation(ctx context.Context, person1 int64, person2 int
 
 }
 
-func (mg *Mongo) ReadMessage(ctx context.Context, person1 int64, person2 int64) error {
+func (mg *Mongo) ReadMessage(ctx context.Context, sendeID int64, receiverID int64) error {
 
 	var err error
 
-	filter := bson.D{{Key: "is_read", Value: false}}
+	filter := bson.D{{Key: "sender_id", Value: sendeID}, {Key: "receiver_id", Value: receiverID}, {Key: "is_read", Value: false}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "is_read", Value: true}}}}
 
 	var cName string
-	cName, err = createCollection(person1, person2)
-	c := mg.Client.Database("PrivateMessages").Collection(cName)
+	cName, err = createCollection(sendeID, receiverID)
+	c := mg.Client.Database(database.DatabaseName).Collection(cName)
 	c.UpdateMany(ctx, filter, update)
 
 	return err
@@ -108,4 +108,21 @@ func New(uri string) (database.Database, error) {
 
 	db.Client = client
 	return db, nil
+}
+
+func (mg *Mongo) CountUnread(ctx context.Context, senderID int64, receiverID int64) (int64, error) {
+	var unread int64
+	var err error
+
+	var cname string
+	cname, err = createCollection(senderID, receiverID)
+	if err != nil {
+		return unread, err
+	}
+
+	c := mg.Client.Database(database.DatabaseName).Collection(cname)
+
+	filter := bson.D{{Key: "sender_id", Value: senderID}, {Key: "receiver_id", Value: receiverID}, {Key: "is_read", Value: false}}
+	return c.CountDocuments(ctx, filter)
+
 }

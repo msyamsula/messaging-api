@@ -65,7 +65,7 @@ func main() {
 	}
 
 	secret := os.Getenv("JSON_SECRET")
-	expiryTime := 30 * time.Minute
+	expiryTime := 24 * time.Hour
 	tokenI := tokenO.New([]byte(secret), expiryTime)
 
 	r := gin.Default()
@@ -105,6 +105,7 @@ func main() {
 	r.POST(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.InsertMessage)
 	r.GET(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.GetConversation)
 	r.PUT(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.ReadMessage)
+	r.GET(apiPrefix+"/message/unread", msgHandler.CountUnread)
 
 	r.Run(fmt.Sprintf(":%v", os.Getenv("APP_PORT")))
 }

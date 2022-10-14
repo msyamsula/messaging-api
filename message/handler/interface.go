@@ -6,4 +6,5 @@ type Handler interface {
 	InsertMessage(c *gin.Context)
 	ReadMessage(c *gin.Context)
 	GetConversation(c *gin.Context)
+	CountUnread(c *gin.Context)
 }
