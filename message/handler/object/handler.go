@@ -2,7 +2,6 @@ package object
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -183,7 +182,6 @@ func (h *Handler) CountUnread(c *gin.Context) {
 
 	p := params{}
 	err = c.Bind(&p)
-	fmt.Println(p)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{
 			"message": "wrong http params",

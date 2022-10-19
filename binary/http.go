@@ -9,6 +9,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	graphHandlerO "github.com/msyamsula/messaging-api/graph/handler/object"
 	msgDBI "github.com/msyamsula/messaging-api/message/database"
 	msgDB "github.com/msyamsula/messaging-api/message/database/object"
 	msgHandler "github.com/msyamsula/messaging-api/message/handler/object"
@@ -64,6 +65,8 @@ func main() {
 		messageService = msgSvc.New(db)
 	}
 
+	graphHandler := graphHandlerO.New()
+
 	secret := os.Getenv("JSON_SECRET")
 	expiryTime := 24 * time.Hour
 	tokenI := tokenO.New([]byte(secret), expiryTime)
@@ -106,6 +109,8 @@ func main() {
 	r.GET(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.GetConversation)
 	r.PUT(apiPrefix+"/message", mdwareHandlerI.ValidateToken, msgHandler.ReadMessage)
 	r.GET(apiPrefix+"/message/unread", msgHandler.CountUnread)
+
+	r.POST(apiPrefix+"/graph/dfs", graphHandler.SolveDFS)
 
 	r.Run(fmt.Sprintf(":%v", os.Getenv("APP_PORT")))
 }

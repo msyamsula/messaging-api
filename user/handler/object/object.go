@@ -1,7 +1,6 @@
 package object
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -80,8 +79,6 @@ func (h *HandlerObj) Login(c *gin.Context) {
 func (h *HandlerObj) Register(c *gin.Context) {
 	var body handler.LoginBody
 	c.BindJSON(&body)
-
-	fmt.Println(body)
 
 	var err error
 	var user database.User
