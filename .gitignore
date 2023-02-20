@@ -2,3 +2,4 @@ prod/*
 messaging-api
 .vscode
 .prod*
+http
