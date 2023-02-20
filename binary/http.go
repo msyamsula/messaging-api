@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	graphHandlerO "github.com/msyamsula/messaging-api/graph/handler/object"
 	msgDBI "github.com/msyamsula/messaging-api/message/database"
@@ -27,6 +28,7 @@ import (
 )
 
 func main() {
+	godotenv.Load(".prodEnv")
 
 	var userService userSvcI.Service
 	{

@@ -9,6 +9,8 @@ require (
 	go.mongodb.org/mongo-driver v1.10.3
 )
 
+require github.com/joho/godotenv v1.5.1 // indirect
+
 require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/sse v0.1.0 // indirect
